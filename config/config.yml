@@ -1,0 +1,40 @@
+logs:
+  apache: "/var/log/apache2/access.log"
+  mysql: "/var/log/mysql/mysql.log"
+
+detection:
+  brute_force:
+    enabled: true
+    requests_threshold: 20
+    window_seconds: 2
+
+response:
+  iptables:
+    enabled: true
+    command: "sudo iptables -A INPUT -s {ip} -j DROP"
+
+  fail2ban:
+    enabled: false
+    jail: "apache-auth"
+    command: "sudo fail2ban-client set {jail} banip {ip}"
+
+alerting:
+  smtp:
+    enabled: true
+    server: "smtp.gmail.com"
+    port: 587
+    from_email: "change-me@example.com"
+    to_email: "change-me@example.com"
+    username_env: "IDS_SMTP_USER"
+    password_env: "IDS_SMTP_PASSWORD"
+
+  webhook:
+    enabled: false             
+    url: "https://discord.com/api/webhooks/XXX/YYY"   # ou Slack, etc.
+    timeout_seconds: 5
+    verify_tls: true
+
+reporting:
+  incidents_dir: "./reports/incidents"
+  severity_min_email: "MEDIUM"    # LOW / MEDIUM / HIGH / CRITICAL
+  severity_min_block: "HIGH"
