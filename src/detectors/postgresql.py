@@ -11,9 +11,13 @@ AUTH_PATTERNS = (
     "SASL authentication failed",
     "authentication failed for user",
     "invalid length of startup packet",
+    "replication connection startup rejected",
+    "connection matched pg_hba.conf entry",
+    "FATAL:",
 )
 
 IP_REGEX = re.compile(r"host=([0-9]{1,3}(?:\.[0-9]{1,3}){3})")
+CLIENT_REGEX = re.compile(r"client=([0-9]{1,3}(?:\.[0-9]{1,3}){3})")
 
 
 def detect(event: Dict) -> Optional[Dict]:
@@ -29,14 +33,22 @@ def detect(event: Dict) -> Optional[Dict]:
 
     ip = event.get("ip")
     if not ip:
-        match = IP_REGEX.search(raw)
+        match = IP_REGEX.search(raw) or CLIENT_REGEX.search(raw)
         if match:
             ip = match.group(1)
+
+    severity = "MEDIUM"
+    if "no pg_hba.conf entry" in lowered or "invalid length of startup packet" in lowered:
+        severity = "HIGH"
+    if "replication" in lowered:
+        severity = "HIGH"
+    if "pam" in lowered or "ldap" in lowered or "sasl" in lowered:
+        severity = "HIGH"
 
     return {
         "attack_type": "PostgreSQL Auth Failure",
         "description": f"Signal PostgreSQL: {matched}",
-        "severity": "MEDIUM",
+        "severity": severity,
         "ip": ip,
         "event": event,
     }

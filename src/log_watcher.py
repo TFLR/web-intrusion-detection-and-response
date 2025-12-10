@@ -7,7 +7,13 @@ from typing import Dict, Generator, Optional, Tuple
 
 
 APACHE_REGEX = re.compile(
-    r"(?P<ip>\d+\.\d+\.\d+\.\d+).*\[(?P<ts>\d+/\w+/\d+:\d+:\d+:\d+)"
+    r"(?P<ip>\d{1,3}(?:\.\d{1,3}){3})\s+"  # IP
+    r"\S+\s+\S+\s+"                         # ident/user (ignored)
+    r"\[(?P<ts>[^\]]+)\]\s+"                # timestamp
+    r"\"(?P<method>[A-Z]+)\s+(?P<path>[^\s\"]+)\s+[^\"]*\"\s+"  # request line
+    r"(?P<status>\d{3})\s+"                   # status code
+    r"(?P<size>\S+)"                          # response size
+    r"(?:\s+\"(?P<referrer>[^\"]*)\"\s+\"(?P<user_agent>[^\"]*)\")?"  # optional ref/ua
 )
 
 
@@ -63,12 +69,21 @@ def parse_apache_line(line: str) -> Optional[Dict]:
         return None
     ip = match.group("ip")
     ts_str = match.group("ts")
-    ts = datetime.strptime(ts_str, "%d/%b/%Y:%H:%M:%S")
+    try:
+        ts = datetime.strptime(ts_str.split()[0], "%d/%b/%Y:%H:%M:%S")
+    except Exception:
+        return None
     return {
         "source": "apache",
         "ip": ip,
         "timestamp": ts,
         "raw": line,
+        "method": match.group("method"),
+        "path": match.group("path"),
+        "status": match.group("status"),
+        "size": match.group("size"),
+        "referrer": match.group("referrer"),
+        "user_agent": match.group("user_agent"),
     }
 
 

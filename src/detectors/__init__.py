@@ -22,6 +22,7 @@ def _as_detector(candidate: Any) -> Optional[DetectorFunc]:
 def load_detectors(config=None) -> List[DetectorFunc]:
     """Charge tous les modules de détecteurs et retourne les callables prêts à l'emploi."""
     detectors: List[DetectorFunc] = []
+    seen = set()
 
     for _, module_name, _ in pkgutil.iter_modules(__path__):
         if module_name.startswith("_"):
@@ -62,6 +63,9 @@ def load_detectors(config=None) -> List[DetectorFunc]:
 
         detector_fn = _as_detector(candidate)
         if detector_fn:
+            if id(detector_fn) in seen:
+                continue
+            seen.add(id(detector_fn))
             detectors.append(detector_fn)
         else:
             logging.debug("Aucun détecteur callable trouvé dans %s", module_name)
