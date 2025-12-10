@@ -26,17 +26,20 @@ class Config:
 
     def _infer_source_name(self, path: str, existing: Dict[str, str]) -> str:
         lower = path.lower()
-        if "apache" in lower or "httpd" in lower:
-            return "apache"
-        if "mysql" in lower:
-            return "mysql"
 
-        base = os.path.basename(path) or "log"
-        name, _ = os.path.splitext(base)
-        candidate = name or base
+        if "apache" in lower or "httpd" in lower:
+            base_name = "apache"
+        elif "mysql" in lower:
+            base_name = "mysql"
+        else:
+            base = os.path.basename(path) or "log"
+            name, _ = os.path.splitext(base)
+            base_name = name or base
+
+        candidate = base_name
         suffix = 1
         while candidate in existing:
-            candidate = f"{name}_{suffix}"
+            candidate = f"{base_name}_{suffix}"
             suffix += 1
         return candidate
 

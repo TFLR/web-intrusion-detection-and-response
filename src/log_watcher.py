@@ -84,7 +84,7 @@ def build_mysql_event(line: str) -> Dict:
 
 def build_event_from_source(source: str, line: str) -> Optional[Dict]:
     """Construit un événement standardisé à partir d'un nom de source et d'une ligne brute."""
-    if source == "apache":
+    if source.startswith("apache"):
         parsed = parse_apache_line(line)
         if parsed:
             return parsed
@@ -96,7 +96,7 @@ def build_event_from_source(source: str, line: str) -> Optional[Dict]:
             "raw": line,
         }
 
-    if source == "mysql":
+    if source.startswith("mysql"):
         return build_mysql_event(line)
 
     return {
