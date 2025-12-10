@@ -1,12 +1,21 @@
 logs:
   include_globs:
+    - "/var/log/*.log"
+    - "/var/log/*log*"        # couvre syslog, syslog.1, messages, auth.log
     - "/var/log/**/*.log"
+    - "/var/log/**/*.log.*"
+    - "/var/log/**/syslog*"
   exclude_globs:
     - "/var/log/**/*.gz"
+    - "/var/log/**/*.xz"
+    - "/var/log/**/*.bz2"
     - "/var/log/wtmp"
     - "/var/log/btmp"
-  apache: "/var/log/apache2/access.log"
-  mysql: "/var/log/mysql/mysql.log"
+    - "/var/log/lastlog"
+    - "/var/log/private/**"
+    - "/var/log/journal/**"
+    - "/var/log/**/installer/**"
+    - "/var/log/**/README"
 
 detection:
   brute_force:
