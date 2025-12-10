@@ -1,17 +1,12 @@
 import logging
 from logging.handlers import RotatingFileHandler
-from typing import Dict, List
+from typing import Dict
 
-from config import load_config, SEVERITY_ORDER
-from log_watcher import (
-    tail_f,
-    parse_apache_line,
-    build_mysql_event,
-)
-from detectors import sqli, xss, nikto
-from detectors.brute_force import BruteForceDetector
-from response.iptables import IptablesResponder
+import detectors
+from config import SEVERITY_ORDER, load_config
+from log_watcher import build_event_from_source, iter_logs
 from response.fail2ban import Fail2BanResponder
+from response.iptables import IptablesResponder
 from alerting.smtp_alert import SMTPAlerter
 from alerting.webhook_alert import WebhookAlerter
 from reporting.incident_report import IncidentReporter
@@ -94,15 +89,14 @@ def handle_incident(
 
 def main():
     setup_logging()
-    logging.info("Démarrage de l'IDS Web (Apache/MySQL)")
+    logging.info("Démarrage de l'IDS Web (multi-logs)")
 
     cfg = load_config()
 
-    # Initialisation brute force
-    bf_detector = BruteForceDetector(
-        threshold=cfg.brute_force_threshold,
-        window_seconds=cfg.brute_force_window,
-    )
+    detector_functions = detectors.load_detectors(cfg)
+    if not detector_functions:
+        logging.error("Aucun détecteur disponible, arrêt.")
+        return
 
     # Réponse (iptables)
     iptables_responder = IptablesResponder(
@@ -138,9 +132,16 @@ def main():
 
     # Reporter
     reporter = IncidentReporter(cfg.incidents_dir)
+    log_sources = cfg.log_sources
+    if not log_sources:
+        logging.error("Aucune source de log configurée.")
+        return
 
-    apache_stream = tail_f(cfg.apache_log_path)
-    mysql_stream = tail_f(cfg.mysql_log_path)
+    logging.info(
+        "Surveillance des logs (%d): %s",
+        len(log_sources),
+        ", ".join(f"{name}={path}" for name, path in log_sources.items()),
+    )
 
     try:
         print("  ___ ____  ____")
@@ -148,54 +149,34 @@ def main():
         print("  | || | | \\___ \\ ")
         print("  | || |_| |___) | ")
         print(" |___|____/|____/ ")
-        print("\n Web IDS en temps réel (Apache + MySQL)\n")
+        print("\n Web IDS en temps réel (multi-logs)\n")
 
-        while True:
-            # MySQL → XSS
-            mysql_line = next(mysql_stream)
-            mysql_event = build_mysql_event(mysql_line)
-            incident = xss.detect(mysql_event)
-            if incident:
-                handle_incident(
-                    incident,
-                    cfg,
-                    iptables_responder,
-                    fail2ban_responder,
-                    smtp_alerter,
-                    webhook_alerter,
-                    reporter,
-                )
-
-            # Apache → SQLi, Nikto, Brute force
-            apache_line = next(apache_stream)
-            apache_event = parse_apache_line(apache_line)
-            if not apache_event:
+        for source_name, line in iter_logs(log_sources):
+            event = build_event_from_source(source_name, line)
+            if not event:
                 continue
 
-            incidents: List[Dict] = []
-
-            inc_sqli = sqli.detect(apache_event)
-            if inc_sqli:
-                incidents.append(inc_sqli)
-
-            inc_nikto = nikto.detect(apache_event)
-            if inc_nikto:
-                incidents.append(inc_nikto)
-
-            inc_bf = bf_detector.process_event(apache_event)
-            if inc_bf:
-                incidents.append(inc_bf)
-
-            for inc in incidents:
-                handle_incident(
-                    inc,
-                    cfg,
-                    iptables_responder,
-                    fail2ban_responder,
-                    smtp_alerter,
-                    webhook_alerter,
-                    reporter,
-                )
+            for detector in detector_functions:
+                try:
+                    incident = detector(event)
+                except Exception as exc:  # pragma: no cover - résilience runtime
+                    logging.exception(
+                        "Erreur dans le détecteur %s (source=%s): %s",
+                        getattr(detector, "__name__", detector.__class__.__name__),
+                        source_name,
+                        exc,
+                    )
+                    continue
+                if incident:
+                    handle_incident(
+                        incident,
+                        cfg,
+                        iptables_responder,
+                        fail2ban_responder,
+                        smtp_alerter,
+                        webhook_alerter,
+                        reporter,
+                    )
 
     except KeyboardInterrupt:
         logging.info("Arrêt de l'IDS par l'utilisateur.")

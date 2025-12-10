@@ -1,4 +1,7 @@
+import glob
 import os
+from typing import Dict
+
 import yaml
 
 
@@ -12,6 +15,68 @@ SEVERITY_ORDER = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 class Config:
     def __init__(self, data: dict):
         self.data = data or {}
+
+    @staticmethod
+    def _ensure_list(value) -> list:
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return value
+        return [value]
+
+    def _infer_source_name(self, path: str, existing: Dict[str, str]) -> str:
+        lower = path.lower()
+        if "apache" in lower or "httpd" in lower:
+            return "apache"
+        if "mysql" in lower:
+            return "mysql"
+
+        base = os.path.basename(path) or "log"
+        name, _ = os.path.splitext(base)
+        candidate = name or base
+        suffix = 1
+        while candidate in existing:
+            candidate = f"{name}_{suffix}"
+            suffix += 1
+        return candidate
+
+    @property
+    def log_sources(self) -> Dict[str, str]:
+        """Retourne un mapping {source: chemin} pour tous les logs à surveiller."""
+        logs_cfg = self.data.get("logs", {}) or {}
+        include_globs = self._ensure_list(logs_cfg.get("include_globs"))
+        exclude_globs = self._ensure_list(logs_cfg.get("exclude_globs"))
+
+        sources: Dict[str, str] = {}
+
+        # Sources explicites (nommées) dans la config
+        for name, path in logs_cfg.items():
+            if name in ("include_globs", "exclude_globs"):
+                continue
+            if isinstance(path, str):
+                sources[name] = path
+
+        # Par défaut, on étend la recherche à tous les fichiers *.log dans /var/log
+        if not include_globs:
+            include_globs = ["/var/log/**/*.log"]
+
+        excluded_paths = set()
+        for pattern in exclude_globs:
+            excluded_paths.update(glob.glob(pattern, recursive=True))
+
+        for pattern in include_globs:
+            for path in glob.glob(pattern, recursive=True):
+                if not os.path.isfile(path) or path in excluded_paths:
+                    continue
+                name = self._infer_source_name(path, sources)
+                sources.setdefault(name, path)
+
+        # Fallback pour conserver l'ancien comportement minimal
+        if not sources:
+            sources["apache"] = self.apache_log_path
+            sources["mysql"] = self.mysql_log_path
+
+        return sources
 
     @property
     def apache_log_path(self) -> str:

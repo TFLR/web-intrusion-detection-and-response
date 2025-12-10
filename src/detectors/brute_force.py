@@ -45,3 +45,9 @@ class BruteForceDetector:
             }
 
         return None
+
+
+def build_detector(cfg=None) -> "BruteForceDetector":
+    threshold = getattr(cfg, "brute_force_threshold", 20)
+    window_seconds = getattr(cfg, "brute_force_window", 2)
+    return BruteForceDetector(threshold=threshold, window_seconds=window_seconds)
