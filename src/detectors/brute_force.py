@@ -35,7 +35,9 @@ class BruteForceDetector:
             status = None
 
         # On cible de préférence les endpoints de login / auth ou les codes d'échec
-        is_login_path = any(k in path for k in ("login", "auth", "signin", "wp-login", "admin"))
+        is_login_path = any(
+            k in path for k in ("login", "auth", "signin", "wp-login", "admin")
+        )
         is_fail_status = status in {401, 403, 429}
         is_post = method == "POST"
 
@@ -46,7 +48,9 @@ class BruteForceDetector:
         ip_hist = self.history.get(ip, [])
 
         # On garde uniquement les événements dans la fenêtre
-        ip_hist = [t for t in ip_hist if (ts - t).total_seconds() <= self.window_seconds]
+        ip_hist = [
+            t for t in ip_hist if (ts - t).total_seconds() <= self.window_seconds
+        ]
         ip_hist.append(ts)
         self.history[ip] = ip_hist
 

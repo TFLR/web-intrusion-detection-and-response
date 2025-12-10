@@ -2,8 +2,15 @@ from typing import Optional, Dict
 
 
 XSS_PATTERNS = (
-    "<script", "</script", "onerror=", "onload=", "javascript:", "alert(",
-    "<img", "<svg", "<iframe",
+    "<script",
+    "</script",
+    "onerror=",
+    "onload=",
+    "javascript:",
+    "alert(",
+    "<img",
+    "<svg",
+    "<iframe",
 )
 
 

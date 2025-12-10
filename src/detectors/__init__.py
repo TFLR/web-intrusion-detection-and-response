@@ -31,7 +31,9 @@ def load_detectors(config=None) -> List[DetectorFunc]:
         try:
             module = importlib.import_module(f"{__name__}.{module_name}")
         except Exception as exc:
-            logging.error("Impossible de charger le module de détecteur %s: %s", module_name, exc)
+            logging.error(
+                "Impossible de charger le module de détecteur %s: %s", module_name, exc
+            )
             continue
 
         candidate: Any = None

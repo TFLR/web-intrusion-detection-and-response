@@ -38,7 +38,10 @@ def detect(event: Dict) -> Optional[Dict]:
             ip = match.group(1)
 
     severity = "MEDIUM"
-    if "no pg_hba.conf entry" in lowered or "invalid length of startup packet" in lowered:
+    if (
+        "no pg_hba.conf entry" in lowered
+        or "invalid length of startup packet" in lowered
+    ):
         severity = "HIGH"
     if "replication" in lowered:
         severity = "HIGH"

@@ -8,11 +8,11 @@ from typing import Dict, Generator, Optional, Tuple
 
 APACHE_REGEX = re.compile(
     r"(?P<ip>\d{1,3}(?:\.\d{1,3}){3})\s+"  # IP
-    r"\S+\s+\S+\s+"                         # ident/user (ignored)
-    r"\[(?P<ts>[^\]]+)\]\s+"                # timestamp
+    r"\S+\s+\S+\s+"  # ident/user (ignored)
+    r"\[(?P<ts>[^\]]+)\]\s+"  # timestamp
     r"\"(?P<method>[A-Z]+)\s+(?P<path>[^\s\"]+)\s+[^\"]*\"\s+"  # request line
-    r"(?P<status>\d{3})\s+"                   # status code
-    r"(?P<size>\S+)"                          # response size
+    r"(?P<status>\d{3})\s+"  # status code
+    r"(?P<size>\S+)"  # response size
     r"(?:\s+\"(?P<referrer>[^\"]*)\"\s+\"(?P<user_agent>[^\"]*)\")?"  # optional ref/ua
 )
 

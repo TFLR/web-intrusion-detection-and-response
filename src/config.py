@@ -91,7 +91,9 @@ class Config:
 
     @property
     def brute_force_enabled(self) -> bool:
-        return self.data.get("detection", {}).get("brute_force", {}).get("enabled", True)
+        return (
+            self.data.get("detection", {}).get("brute_force", {}).get("enabled", True)
+        )
 
     @property
     def brute_force_threshold(self) -> int:
@@ -131,9 +133,7 @@ class Config:
 
     @property
     def smtp_port(self) -> int:
-        return int(
-            self.data.get("alerting", {}).get("smtp", {}).get("port", 25)
-        )
+        return int(self.data.get("alerting", {}).get("smtp", {}).get("port", 25))
 
     @property
     def smtp_from_email(self) -> str:
@@ -163,38 +163,27 @@ class Config:
 
     @property
     def incidents_dir(self) -> str:
-        return (
-            self.data.get("reporting", {})
-            .get("incidents_dir", "./reports/incidents")
+        return self.data.get("reporting", {}).get(
+            "incidents_dir", "./reports/incidents"
         )
 
     @property
     def severity_min_email(self) -> str:
-        v = (
-            self.data.get("reporting", {})
-            .get("severity_min_email", "MEDIUM")
-        ).upper()
+        v = (self.data.get("reporting", {}).get("severity_min_email", "MEDIUM")).upper()
         return v if v in SEVERITY_ORDER else "MEDIUM"
 
     @property
     def severity_min_block(self) -> str:
-        v = (
-            self.data.get("reporting", {})
-            .get("severity_min_block", "HIGH")
-        ).upper()
+        v = (self.data.get("reporting", {}).get("severity_min_block", "HIGH")).upper()
         return v if v in SEVERITY_ORDER else "HIGH"
-    
+
     @property
     def fail2ban_enabled(self) -> bool:
         return self.data.get("response", {}).get("fail2ban", {}).get("enabled", False)
 
     @property
     def fail2ban_jail(self) -> str:
-        return (
-            self.data.get("response", {})
-            .get("fail2ban", {})
-            .get("jail", "")
-        )
+        return self.data.get("response", {}).get("fail2ban", {}).get("jail", "")
 
     @property
     def fail2ban_command(self) -> str:
@@ -215,17 +204,13 @@ class Config:
     @property
     def webhook_timeout(self) -> int:
         return int(
-            self.data.get("alerting", {})
-            .get("webhook", {})
-            .get("timeout_seconds", 5)
+            self.data.get("alerting", {}).get("webhook", {}).get("timeout_seconds", 5)
         )
 
     @property
     def webhook_verify_tls(self) -> bool:
         return bool(
-            self.data.get("alerting", {})
-            .get("webhook", {})
-            .get("verify_tls", True)
+            self.data.get("alerting", {}).get("webhook", {}).get("verify_tls", True)
         )
 
 

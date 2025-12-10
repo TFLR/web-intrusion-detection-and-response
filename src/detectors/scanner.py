@@ -24,7 +24,7 @@ def detect(event: Dict) -> Optional[Dict]:
         return None
 
     raw = event.get("raw", "")
-    user_agent = (event.get("user_agent") or "")
+    user_agent = event.get("user_agent") or ""
     text = (raw + "\n" + user_agent).lower()
 
     matched = next((kw for kw in SCANNER_KEYWORDS if kw in text), None)

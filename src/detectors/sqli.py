@@ -2,9 +2,20 @@ from typing import Optional, Dict
 
 
 SQLI_PATTERNS = (
-    "%27", "%22", "' or 1=1", "' or '1'='1", " or 1=1 --",
-    "union select", "information_schema", "sleep(", "benchmark(", "extractvalue(",
-    "updatexml(", "load_file(", "outfile", "sqlmap",
+    "%27",
+    "%22",
+    "' or 1=1",
+    "' or '1'='1",
+    " or 1=1 --",
+    "union select",
+    "information_schema",
+    "sleep(",
+    "benchmark(",
+    "extractvalue(",
+    "updatexml(",
+    "load_file(",
+    "outfile",
+    "sqlmap",
 )
 
 

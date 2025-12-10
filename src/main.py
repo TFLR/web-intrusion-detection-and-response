@@ -35,9 +35,7 @@ def setup_logging():
     logger.addHandler(ch)
 
     # Fichier
-    fh = RotatingFileHandler(
-        "logs/ids.log", maxBytes=5 * 1024 * 1024, backupCount=3
-    )
+    fh = RotatingFileHandler("logs/ids.log", maxBytes=5 * 1024 * 1024, backupCount=3)
     fh.setLevel(logging.INFO)
     fh.setFormatter(formatter)
     logger.addHandler(fh)
