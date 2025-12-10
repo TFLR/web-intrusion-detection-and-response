@@ -37,7 +37,7 @@ class BruteForceDetector:
             # On reset l'historique pour éviter le spam
             self.history[ip] = []
             return {
-                "attack_type": "Flood / Brute Force",
+                "attack_type": "HTTP Flood / Brute Force",
                 "description": f"{len(ip_hist)} requêtes en <= {self.window_seconds}s",
                 "severity": "HIGH",
                 "ip": ip,

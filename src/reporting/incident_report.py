@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import logging
 from datetime import datetime
@@ -16,8 +17,10 @@ class IncidentReporter:
         Retourne le chemin du fichier.
         """
         ts = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
-        attack_type = incident.get("attack_type", "unknown").replace(" ", "_")
-        filename = f"{ts}_{attack_type}.json"
+        raw_attack_type = incident.get("attack_type", "unknown")
+        attack_type_slug = re.sub(r"[^A-Za-z0-9_-]+", "_", raw_attack_type)
+        filename = f"{ts}_{attack_type_slug}.json"
+
         path = os.path.join(self.base_dir, filename)
 
         # On enlève les objets non sérialisables (ex: datetime)
